@@ -23,6 +23,7 @@ public class Chef implements Runnable {
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                // Берем заказ из очереди. Если очередь пустая, поток блокируется.
                 Order order = orderQueue.take();
                 prepareOrder(order);
 
@@ -35,6 +36,9 @@ public class Chef implements Runnable {
         System.out.println("Chef-" + id + ": Finished work");
     }
 
+    /**
+     * Готовим заказ
+     */
     private void prepareOrder(Order order) {
         System.out.println("Chef-" + id + ": Cooking " + order.getDish().getName()
                 + " (order #" + order.getId() + ")");
@@ -45,7 +49,7 @@ public class Chef implements Runnable {
 
             synchronized (readyOrders) {
                 readyOrders.add(order);
-                readyOrders.notifyAll();
+                readyOrders.notifyAll();// уведомляем все потоки, ожидающие готовности
             }
 
             System.out.println("Chef-" + id + ": Finished " + order.getDish().getName()
@@ -53,6 +57,8 @@ public class Chef implements Runnable {
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+
+            // Если повар прерван во время готовки, возвращаем заказ обратно в очередь
             try {
                 orderQueue.put(order);
                 System.out.println("Chef-" + id + ": Interrupted, returned order #"
