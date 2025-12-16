@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
  */
 public class Client extends Thread {
     private final BlockingQueue<ClientRequest> clientQueue;
+    private RestaurantConstants.Dish chosenDish;
 
     private boolean served = false;
 
@@ -19,7 +20,8 @@ public class Client extends Thread {
         System.out.println(getName() + ": Entered the restaurant");
 
         RestaurantConstants.Dish[] dishes = RestaurantConstants.Dish.values();
-        RestaurantConstants.Dish chosenDish = dishes[(int)(Math.random() * dishes.length)];
+        chosenDish = dishes[(int)(Math.random() * dishes.length)];
+
 
         try {
             clientQueue.put(new ClientRequest(this, chosenDish));
@@ -41,6 +43,8 @@ public class Client extends Thread {
         served = true;
         notify();
     }
+
+    public double getTip() {
+        return Math.random() * 0.2 * chosenDish.getPrice(); // 0–20% от цены блюда
+    }
 }
-
-
