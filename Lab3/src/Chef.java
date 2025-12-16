@@ -9,7 +9,6 @@ public class Chef implements Runnable {
     private final int id;
     private final BlockingQueue<Order> orderQueue;
     private final List<Order> readyOrders;
-    private volatile boolean running = true;
 
     public Chef(int id, BlockingQueue<Order> orderQueue, List<Order> readyOrders) {
         this.id = id;
@@ -22,7 +21,7 @@ public class Chef implements Runnable {
         Thread.currentThread().setName("Chef-" + id);
         System.out.println("Chef-" + id + ": Started work");
 
-        while (running && !Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 Order order = orderQueue.take();
                 prepareOrder(order);
@@ -42,7 +41,7 @@ public class Chef implements Runnable {
 
         try {
             Thread.sleep(order.getDish().getCookingTime());
-            order.setReady(true);
+            order.markReady();
 
             synchronized (readyOrders) {
                 readyOrders.add(order);
@@ -54,19 +53,14 @@ public class Chef implements Runnable {
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            if (running) {
-                try {
-                    orderQueue.put(order);
-                    System.out.println("Chef-" + id + ": Interrupted, returned order #"
-                            + order.getId() + " to queue");
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                }
+            try {
+                orderQueue.put(order);
+                System.out.println("Chef-" + id + ": Interrupted, returned order #"
+                        + order.getId() + " to queue");
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
             }
         }
-    }
 
-    public void stop() {
-        running = false;
     }
 }
