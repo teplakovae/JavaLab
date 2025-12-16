@@ -19,15 +19,18 @@ public class Client extends Thread {
     public void run() {
         System.out.println(getName() + ": Entered the restaurant");
 
+        // Выбираем случайное блюдо из меню
         RestaurantConstants.Dish[] dishes = RestaurantConstants.Dish.values();
         chosenDish = dishes[(int)(Math.random() * dishes.length)];
 
 
         try {
+            // Отправляем запрос официанту
             clientQueue.put(new ClientRequest(this, chosenDish));
             System.out.println(getName() + ": Waiting for waiter...");
         } catch (InterruptedException ignored) {}
 
+        // Ждем, пока официант принесет блюдо
         synchronized (this) {
             while (!served) {
                 try { wait(); }
@@ -44,7 +47,8 @@ public class Client extends Thread {
         notify();
     }
 
+    // Рандомные чаевые
     public double getTip() {
-        return Math.random() * 0.2 * chosenDish.getPrice(); // 0–20% от цены блюда
+        return Math.random() * 0.2 * chosenDish.getPrice();
     }
 }
