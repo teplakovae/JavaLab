@@ -16,6 +16,7 @@ public class Kitchen {
 
         this.orderQueue = orderQueue;
         this.readyOrders = readyOrders;
+        // Создаем пул фиксированного размера
         this.chefPool = Executors.newFixedThreadPool(initialChefs);
 
         for (int i = 1; i <= initialChefs; i++) {
@@ -26,15 +27,20 @@ public class Kitchen {
         System.out.println("Kitchen: Started with " + initialChefs + " chefs");
     }
 
+    /**
+     * Завершение работы кухни
+     */
     public void shutdown() {
-        chefPool.shutdownNow();
+        chefPool.shutdown();
         try {
+            // Ждем завершения текущих заказов
             if (!chefPool.awaitTermination(3, TimeUnit.SECONDS)) {
-                System.out.println("Kitchen: Some chefs didn't finish in time");
+                chefPool.shutdownNow();
             }
         } catch (InterruptedException e) {
+            chefPool.shutdownNow();
             Thread.currentThread().interrupt();
         }
+
     }
 }
-
